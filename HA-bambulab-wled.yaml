@@ -23,14 +23,14 @@ blueprint:
             - sensor
             integration: bambu_lab
           multiple: false
-    chamber_light:
-      name: Chamber Light of your Bambu Lab Printer
-      description: Select the printer chamber light entity.
+    printer_state:
+      name: Printer state On/Off of your Bambu Lab Printer
+      description: Select the printer state binary sensor.
       selector:
         entity:
           filter:
           - domain:
-            - light
+            - binary_sensor
             integration: bambu_lab
           multiple: false
     wled_lights:
@@ -41,16 +41,16 @@ blueprint:
           filter:
           - integration: wled
           multiple: true
-  source_url: https://github.com/PaulBiod/HA-bambulab-wled/blob/main/HA-bambulab-wled.yaml
+  source_url: https://gist.github.com/dreed47/b33a76472cc813f7bf48a63c3dde7dce
 alias: Bambu Lab WLED Controller
 description: ''
 trigger:
 - platform: state
   entity_id:
-  - !input chamber_light
+  - !input printer_state
   - !input printer_status
   - !input printer_stage
-  alias: When printer stage,status or chamber light state changes
+  alias: When printer stage,status or state changes
 condition: []
 action:
 - delay:
@@ -61,8 +61,8 @@ action:
 - if:
   - condition: state
     state: 'on'
-    alias: chamber light is on
-    entity_id: !input chamber_light
+    alias: printer state is on
+    entity_id: !input printer_state
   - condition: not
     conditions:
     - condition: state
@@ -89,9 +89,9 @@ action:
       - 255
       - 255
       - 255
-      brightness_pct: 100
-      effect: Solid
-    alias: Turn WLED light on white
+      brightness_pct: 200
+      effect: Freqmatrix
+    alias: Turn WLED light on white with effect
     target:
       device_id: !input wled_lights
   - choose:
@@ -109,7 +109,16 @@ action:
           state: paused_nozzle_temperature_malfunction
         - condition: state
           entity_id: !input printer_stage
-          state: paused_heat_bed_temperature_malfunction,
+          state: paused_heat_bed_temperature_malfunction
+        - condition: state
+          entity_id: !input printer_stage
+          state: paused_chamber_temperature_control_error
+        - condition: state
+          entity_id: !input printer_stage
+          state: paused_cutter_error
+        - condition: state
+          entity_id: !input printer_stage
+          state: paused_first_layer_error
       sequence:
       - service: light.turn_on
         data:
@@ -130,12 +139,49 @@ action:
         - condition: state
           entity_id: !input printer_stage
           state: idle
+      sequence:
+      - service: light.turn_on
+        data:
+          rgb_color:
+          - 255
+          - 0
+          - 195
+          brightness: 200
+          effect: Oscillate
+        target:
+          device_id: !input wled_lights
+        alias: Turn on Wled to fushia with oscillate effect
+    alias: Do we need to set color to white?
+  - choose:
+    - conditions:
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: !input printer_stage
+          state: filament_unloading
+        - condition: state
+          entity_id: !input printer_stage
+          state: filament_loading
+      sequence:
+      - service: light.turn_on
+        data:
+          rgb_color:
+          - 255
+          - 255
+          - 255
+          brightness: 255
+          effect: Solid
+        target:
+          device_id: !input wled_lights
+        alias: Turn on Wled to white to check if loading/unloading is ok
+    alias: Do we need to set color to white?
+  - choose:
+    - conditions:
+      - condition: or
+        conditions:
         - condition: state
           entity_id: !input printer_status
           state: finish
-        - condition: state
-          entity_id: !input printer_status
-          state: offline
       sequence:
       - service: light.turn_on
         data:
@@ -148,6 +194,26 @@ action:
         target:
           device_id: !input wled_lights
         alias: Turn on Wled to green
+    alias: Do we need to set color to green?
+  - choose:
+    - conditions:
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: !input printer_status
+          state: pause
+      sequence:
+      - service: light.turn_on
+        data:
+          rgb_color:
+          - 0
+          - 255
+          - 0
+          brightness: 255
+          effect: Blink
+        target:
+          device_id: !input wled_lights
+        alias: Turn on Wled to green with blink effect
     alias: Do we need to set color to green?
   - choose:
     - conditions:
