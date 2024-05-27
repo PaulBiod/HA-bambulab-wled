@@ -158,6 +158,26 @@ action:
         conditions:
         - condition: state
           entity_id: !input printer_stage
+          state: printing
+      sequence:
+      - service: light.turn_on
+        data:
+          rgb_color:
+          - 255
+          - 255
+          - 255
+          brightness: 255
+          effect: Solid
+        target:
+          device_id: !input wled_lights
+        alias: Turn on Wled to full white while printing
+    alias: Do we need to set color to white?
+  - choose:
+    - conditions:
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: !input printer_stage
           state: filament_unloading
         - condition: state
           entity_id: !input printer_stage
