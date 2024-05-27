@@ -41,7 +41,7 @@ blueprint:
           filter:
           - integration: wled
           multiple: true
-  source_url: https://gist.github.com/dreed47/b33a76472cc813f7bf48a63c3dde7dce
+  source_url: https://github.com/PaulBiod/HA-bambulab-wled/blob/main/HA-bambulab-wled.yaml
 alias: Bambu Lab WLED Controller
 description: ''
 trigger:
