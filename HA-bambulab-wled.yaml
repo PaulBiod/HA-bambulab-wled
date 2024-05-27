@@ -89,7 +89,7 @@ action:
       - 255
       - 255
       - 255
-      brightness_pct: 200
+      brightness_pct: 100
       effect: Freqmatrix
     alias: Turn WLED light on white with effect
     target:
