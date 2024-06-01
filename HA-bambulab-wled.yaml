@@ -279,9 +279,26 @@ action:
         alias: Turn on Wled to yellow
     alias: Do we need to set color to yellow?
   else:
-  - service: light.turn_off
-    data: {}
-    target:
-      device_id: !input wled_lights
-    alias: Turn WLED light off
+    - if:
+      - condition: state
+        state: 'off'
+        alias: printer state is off for 15 sec
+        entity_id: !input printer_state
+      then:
+      - delay: "00:00:15"
+      - if:
+        - condition: state
+          state: 'off'
+          entity_id: !input printer_state
+          for:
+            hours: 0
+            minutes: 0
+            seconds: 10
+        then:
+        - service: light.turn_off
+          data: {}
+          target:
+            device_id: !input wled_lights
+          alias: Turn WLED light off
 mode: single
+
